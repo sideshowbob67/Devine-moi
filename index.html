@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Par Cœur</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-height:100vh;}
+.app{max-width:640px;margin:0 auto;padding:1.5rem 1rem;}
+.screen{display:none;}.screen.active{display:block;}
+.header{text-align:center;margin-bottom:2rem;}
+.title{font-size:22px;font-weight:500;}
+.subtitle{font-size:15px;color:#666;margin-top:6px;line-height:1.5;}
+.card{background:#fff;border:1px solid #e8e8e6;border-radius:12px;padding:1.5rem;margin-bottom:1rem;}
+.input-group{margin-bottom:1rem;}
+.input-group label{font-size:13px;color:#666;display:block;margin-bottom:6px;}
+.input-group input{width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#f5f5f3;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:8px;border:1px solid #ddd;background:transparent;font-size:15px;cursor:pointer;width:100%;margin-top:0.5rem;transition:background 0.15s;}
+.btn:hover{background:#f5f5f3;}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+.btn-primary:hover{opacity:0.85;background:#1a1a1a;}
+.phase-banner{background:#f5f5f3;border:1px solid #e8e8e6;border-radius:8px;padding:10px 16px;font-size:13px;color:#666;margin-bottom:1rem;text-align:center;}
+.phase-banner strong{color:#1a1a1a;font-weight:500;}
+.progress-bar{height:4px;background:#e8e8e6;border-radius:2px;margin-bottom:0.75rem;overflow:hidden;}
+.progress-fill{height:100%;background:#1a1a1a;border-radius:2px;transition:width 0.3s;}
+.q-counter{font-size:13px;color:#666;text-align:right;margin-bottom:0.4rem;}
+.cat-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:8px;font-size:12px;margin-bottom:1rem;}
+.cat-fun{background:#fff8e6;color:#b07800;}
+.cat-intime{background:#ffeef0;color:#c0003a;}
+.cat-souvenir{background:#e6f2ff;color:#0055b0;}
+.cat-defi{background:#eaffea;color:#006e00;}
+.question-text{font-size:18px;font-weight:500;line-height:1.5;margin-bottom:1.25rem;}
+.hint{font-size:13px;color:#666;margin-bottom:10px;}
+.options{display:flex;flex-direction:column;gap:10px;}
+.opt{text-align:left;padding:12px 16px;border:1px solid #e8e8e6;border-radius:8px;background:#f5f5f3;font-size:15px;cursor:pointer;transition:all 0.15s;width:100%;}
+.opt:hover:not(:disabled){border-color:#aaa;background:#fff;}
+.opt.selected{border-color:#aaa;background:#fff;font-weight:500;}
+.opt.correct{border-color:#2e7d32;background:#eaffea;color:#1b5e20;}
+.opt.wrong{border-color:#c62828;background:#ffeef0;color:#b71c1c;}
+.opt.reveal{border-color:#2e7d32;background:#eaffea;color:#1b5e20;}
+.opt:disabled{cursor:default;}
+.feedback{padding:12px 16px;border-radius:8px;font-size:14px;margin:1rem 0 0;text-align:center;font-weight:500;}
+.feedback.good{background:#eaffea;color:#1b5e20;}
+.feedback.bad{background:#ffeef0;color:#b71c1c;}
+.score-mini{display:flex;gap:1rem;margin-top:1rem;}
+.score-chip{background:#f5f5f3;border-radius:8px;padding:8px 16px;text-align:center;flex:1;}
+.score-chip-name{font-size:12px;color:#666;}
+.score-chip-val{font-size:20px;font-weight:500;}
+.tr-card{text-align:center;padding:2rem 1.5rem;}
+.tr-emoji{font-size:42px;margin-bottom:1rem;}
+.tr-title{font-size:20px;font-weight:500;margin-bottom:0.75rem;}
+.tr-msg{font-size:15px;color:#666;margin-bottom:1.5rem;line-height:1.6;}
+.steps{display:flex;flex-direction:column;gap:6px;margin-bottom:1.5rem;text-align:left;}
+.step{padding:8px 12px;border-radius:8px;font-size:14px;color:#666;background:#f5f5f3;}
+.result-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8e8e6;}
+.result-row:last-of-type{border-bottom:none;}
+.result-name{font-size:15px;}
+.result-pts{font-size:20px;font-weight:500;}
+.winner-pts{color:#1b5e20;}
+.result-total{text-align:center;font-size:14px;color:#666;margin-top:1rem;}
+.result-msg{text-align:center;font-size:15px;color:#666;line-height:1.6;margin-top:0.75rem;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SETUP -->
+<div class="screen active" id="s-setup">
+  <div class="header">
+    <div style="font-size:32px;margin-bottom:0.75rem;">❤️ 🎯 ❤️</div>
+    <div class="title">Par Cœur</div>
+    <div class="subtitle">4 phases · 20 questions chacun</div>
+  </div>
+  <div class="card">
+    <div class="steps">
+      <div class="step">① Joueur 1 répond à ses questions</div>
+      <div class="step">② Joueur 2 répond à ses questions</div>
+      <div class="step">③ Joueur 1 devine les réponses de Joueur 2</div>
+      <div class="step">④ Joueur 2 devine les réponses de Joueur 1</div>
+    </div>
+    <div class="input-group"><label>Joueur 1</label><input id="p1" placeholder="Prénom..." maxlength="20"/></div>
+    <div class="input-group"><label>Joueur 2</label><input id="p2" placeholder="Prénom..." maxlength="20"/></div>
+    <button class="btn btn-primary" onclick="startGame()">▶ Lancer le jeu</button>
+  </div>
+</div>
+
+<!-- TRANSITION -->
+<div class="screen" id="s-transition">
+  <div class="card tr-card">
+    <div class="tr-emoji" id="tr-emoji"></div>
+    <div class="tr-title" id="tr-title"></div>
+    <div class="tr-msg" id="tr-msg"></div>
+    <button class="btn btn-primary" id="tr-btn" onclick="trNext && trNext()"></button>
+  </div>
+</div>
+
+<!-- RÉPONDRE -->
+<div class="screen" id="s-answer">
+  <div class="q-counter" id="a-counter"></div>
+  <div class="progress-bar"><div class="progress-fill" id="a-prog"></div></div>
+  <div class="phase-banner" id="a-banner"></div>
+  <div class="card">
+    <div class="cat-badge" id="a-cat"></div>
+    <div class="question-text" id="a-q"></div>
+    <div class="hint">Réponds honnêtement — l'autre ne regarde pas !</div>
+    <div class="options" id="a-opts"></div>
+  </div>
+</div>
+
+<!-- DEVINER -->
+<div class="screen" id="s-guess">
+  <div class="q-counter" id="g-counter"></div>
+  <div class="progress-bar"><div class="progress-fill" id="g-prog"></div></div>
+  <div class="phase-banner" id="g-banner"></div>
+  <div class="card">
+    <div class="cat-badge" id="g-cat"></div>
+    <div class="question-text" id="g-q"></div>
+    <div class="hint" id="g-sub"></div>
+    <div class="options" id="g-opts"></div>
+    <div class="feedback" id="g-fb" style="display:none;"></div>
+    <button class="btn btn-primary" id="g-next" style="display:none;margin-top:1rem;" onclick="nextGuess()">Question suivante →</button>
+  </div>
+  <div class="score-mini">
+    <div class="score-chip"><div class="score-chip-name" id="sc1n"></div><div class="score-chip-val" id="sc1v">0 ❤️</div></div>
+    <div class="score-chip"><div class="score-chip-name" id="sc2n"></div><div class="score-chip-val" id="sc2v">0 ❤️</div></div>
+  </div>
+</div>
+
+<!-- RÉSULTATS -->
+<div class="screen" id="s-result">
+  <div class="header"><div class="title">Résultats finaux</div></div>
+  <div class="card">
+    <div class="result-row"><span class="result-name" id="r-n1"></span><span class="result-pts" id="r-p1"></span></div>
+    <div class="result-row"><span class="result-name" id="r-n2"></span><span class="result-pts" id="r-p2"></span></div>
+    <div class="result-total" id="r-total"></div>
+    <div class="result-msg" id="r-msg"></div>
+  </div>
+  <button class="btn btn-primary" onclick="restartGame()">↺ Rejouer</button>
+</div>
+
+</div>
+<script>
+const QS=[
+  {cat:'fun',label:'😄 Fun',q:'Quelle est ma pizza préférée ?',opts:['Margherita','Reine','4 fromages','Orientale']},
+  {cat:'intime',label:'💕 Intime',q:'Quelle est ma plus grande peur ?',opts:['Les araignées','L\'échec','La solitude','Perdre un proche']},
+  {cat:'souvenir',label:'🧠 Souvenir',q:'Notre premier rendez-vous, c\'était…',opts:['Un dîner au restaurant','Une balade','Un verre en bar','Un ciné']},
+  {cat:'defi',label:'🔥 Défi',q:'Ce qui m\'énerve le plus chez l\'autre (sans mentir) ?',opts:['Les retards','Le désordre','L\'oubli des tâches','Le manque d\'initiative']},
+  {cat:'fun',label:'😄 Fun',q:'Mon film préféré est plutôt…',opts:['Une comédie','Un thriller','Un film d\'amour','Un film d\'action']},
+  {cat:'intime',label:'💕 Intime',q:'Quel est mon rêve de vie idéale ?',opts:['Maison à la campagne','Voyage sans fin','Appartement en ville','Vivre au bord de la mer']},
+  {cat:'fun',label:'😄 Fun',q:'Je préfère : mer ou montagne ?',opts:['Mer','Montagne','Les deux !','Ni l\'un ni l\'autre']},
+  {cat:'defi',label:'🔥 Défi',q:'Ce qui me stresse le plus dans la vie, c\'est…',opts:['L\'argent','Le travail','L\'avenir','Ce que pensent les autres']},
+  {cat:'souvenir',label:'🧠 Souvenir',q:'Quel est notre meilleur souvenir ensemble ?',opts:['Un voyage','Un repas mémorable','Un fou-rire','Une belle soirée']},
+  {cat:'intime',label:'💕 Intime',q:'Ma façon préférée de passer un dimanche ?',opts:['Rester au lit','Sortir se balader','Cuisiner ensemble','Voir de la famille']},
+  {cat:'fun',label:'😄 Fun',q:'Mon péché mignon côté nourriture, c\'est…',opts:['Le chocolat','Les chips','La glace','Le fromage']},
+  {cat:'defi',label:'🔥 Défi',q:'Si je devais décrire notre couple en un mot, ce serait…',opts:['Complice','Passionné','Solide','Fun']},
+  {cat:'souvenir',label:'🧠 Souvenir',q:'Lequel de nous deux a dit "je t\'aime" en premier ?',opts:['Moi','Toi','On l\'a dit en même temps','Je ne sais plus']},
+  {cat:'intime',label:'💕 Intime',q:'Quelle qualité j\'admire le plus chez toi ?',opts:['Ta générosité','Ton humour','Ta force','Ta douceur']},
+  {cat:'fun',label:'😄 Fun',q:'Si j\'étais un animal, je serais…',opts:['Un lion','Un dauphin','Un chat','Un aigle']},
+  {cat:'intime',label:'💕 Intime',q:'Qu\'est-ce qui me rend le plus heureux·se au quotidien ?',opts:['Un bon café le matin','Un message doux','Une belle surprise','Du temps calme seul·e']},
+  {cat:'defi',label:'🔥 Défi',q:'Ce que je n\'ai jamais dit à voix haute mais que tu devrais savoir…',opts:['Je suis parfois jaloux·se','J\'ai besoin de plus d\'attention','Tes compliments me touchent vraiment','J\'aime quand tu prends l\'initiative']},
+  {cat:'souvenir',label:'🧠 Souvenir',q:'Qu\'est-ce que j\'ai pensé la première fois qu\'on s\'est vus ?',opts:['Trop bien habillé·e','Joli sourire','L\'air timide','Vraiment à l\'aise']},
+  {cat:'fun',label:'😄 Fun',q:'Ma série préférée du moment ?',opts:['Stranger Things','The Bear','Squid Game','Breaking Bad']},
+  {cat:'defi',label:'🔥 Défi',q:'Si je pouvais changer une chose chez moi, ce serait…',opts:['Ma patience','Mon organisation','Ma confiance en moi','Mon humeur le matin']},
+  {cat:'fun',label:'😄 Fun',q:'Je préfère grasse matinée ou lever tôt ?',opts:['Grasse matinée','Lever tôt','Ça dépend du jour','Je suis toujours fatigué·e']},
+  {cat:'intime',label:'💕 Intime',q:'Quelle est la chose qui compte le plus pour moi dans une relation ?',opts:['La confiance','La complicité','La tendresse','La liberté']},
+  {cat:'fun',label:'😄 Fun',q:'Mon style de vacances idéales ?',opts:['All inclusive plage','Road trip','City break','Rando nature']},
+  {cat:'intime',label:'💕 Intime',q:'Ce dont j\'ai le plus besoin quand ça ne va pas ?',opts:['Un câlin','Être seul·e','Qu\'on m\'écoute','Être distrait·e']},
+  {cat:'defi',label:'🔥 Défi',q:'Mon comportement agaçant que je reconnais moi-même ?',opts:['Je procrastine','Je dramatise','Je parle trop','Je suis têtu·e']},
+  {cat:'souvenir',label:'🧠 Souvenir',q:'La première chose que j\'ai remarquée chez toi physiquement ?',opts:['Tes yeux','Ton sourire','Ta façon de bouger','Ton style']},
+  {cat:'intime',label:'💕 Intime',q:'Est-ce que je me sens plutôt introverti·e ou extraverti·e ?',opts:['Introverti·e','Extraverti·e','Les deux selon les moments','Je ne sais pas trop']},
+  {cat:'defi',label:'🔥 Défi',q:'Si je pouvais tout plaquer demain, je ferais…',opts:['Ouvrir un resto/café','Voyager indéfiniment','Me reconvertir artistiquement','Rien changer en fait']},
+  {cat:'fun',label:'😄 Fun',q:'Je bois mon café…',opts:['Noir sans sucre','Avec du lait','Sucré·e','Je ne bois pas de café']},
+  {cat:'intime',label:'💕 Intime',q:'Ce que j\'espère pour nous dans 10 ans ?',opts:['Voyager ensemble','Avoir fondé une famille','Être épanoui·e professionnellement','Profiter de la vie simplement']},
+  {cat:'defi',label:'🔥 Défi',q:'Qu\'est-ce que je fais quand je suis vraiment de mauvaise humeur ?',opts:['Je me renferme','Je suis irritable','Je cherche à être seul·e','Je l\'exprime directement']},
+  {cat:'fun',label:'😄 Fun',q:'Mon genre musical préféré ?',opts:['Pop / RnB','Rock / Metal','Électro','Variété française']},
+  {cat:'souvenir',label:'🧠 Souvenir',q:'Qu\'est-ce qu\'on a fait pour notre premier anniversaire ?',opts:['Un resto','Un voyage','Une surprise maison','On a failli oublier !']},
+  {cat:'intime',label:'💕 Intime',q:'Mon plus grand rêve que je n\'ai jamais osé dire ?',opts:['Écrire un livre','Créer ma boîte','Vivre à l\'étranger','Apprendre un art']},
+  {cat:'defi',label:'🔥 Défi',q:'Ce dont je suis le plus fier·e de moi ?',opts:['Mon parcours pro','Ma résilience','Mes relations','Une chose que j\'ai accomplie']},
+  {cat:'fun',label:'😄 Fun',q:'Mon émoji le plus utilisé ?',opts:['😂','❤️','😅','🙏']},
+  {cat:'souvenir',label:'🧠 Souvenir',q:'Si on devait revivre un moment ensemble, ce serait…',opts:['Notre premier voyage','Un soir particulier','Un repas de fête','Le jour où on s\'est déclaré·e·s']},
+  {cat:'intime',label:'💕 Intime',q:'Ce que je ne supporte pas chez les autres ?',opts:['L\'hypocrisie','L\'irrespect','La médiocrité','L\'ingratitude']},
+  {cat:'defi',label:'🔥 Défi',q:'Si je devais te décrire en 3 mots, je dirais…',opts:['Drôle, doux·ce, sincère','Solide, fiable, calme','Passionné·e, intense, généreux·se','Curieux·se, créatif·ve, libre']},
+  {cat:'fun',label:'😄 Fun',q:'Mon activité détente après une longue journée ?',opts:['Regarder une série','Lire','Jouer à un jeu','Rien faire du tout']},
+];
+
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+let names=['',''],scores=[0,0];
+let qsP1=[],qsP2=[],answersP1=[],answersP2=[];
+let phase=0,curIdx=0,trNext=null,answering=false;
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function transition(emoji,title,msg,btnLabel,next){
+  trNext=next;
+  document.getElementById('tr-emoji').textContent=emoji;
+  document.getElementById('tr-title').textContent=title;
+  document.getElementById('tr-msg').textContent=msg;
+  document.getElementById('tr-btn').textContent=btnLabel;
+  showScreen('s-transition');
+}
+
+function startGame(){
+  names[0]=document.getElementById('p1').value.trim()||'Joueur 1';
+  names[1]=document.getElementById('p2').value.trim()||'Joueur 2';
+  scores=[0,0];answersP1=[];answersP2=[];curIdx=0;phase=0;
+  const all=shuffle(QS);qsP1=all.slice(0,20);qsP2=all.slice(20,40);
+  document.getElementById('sc1n').textContent=names[0];
+  document.getElementById('sc2n').textContent=names[1];
+  transition('👀','Phase 1 — '+names[0]+' répond',names[1]+', ferme les yeux ! '+names[0]+' va répondre secrètement à ses 20 questions.','Je suis prêt·e, on y va !',()=>loadAnswer());
+}
+
+function loadAnswer(){
+  answering=false;
+  const qs=phase===0?qsP1:qsP2,who=phase===0?names[0]:names[1],q=qs[curIdx];
+  document.getElementById('a-counter').textContent='Question '+(curIdx+1)+' / 20';
+  document.getElementById('a-prog').style.width=((curIdx/20)*100)+'%';
+  document.getElementById('a-banner').innerHTML='<strong>'+who+'</strong> répond sur lui·elle-même';
+  const cat=document.getElementById('a-cat');cat.textContent=q.label;cat.className='cat-badge cat-'+q.cat;
+  document.getElementById('a-q').textContent=q.q;
+  const optsEl=document.getElementById('a-opts');optsEl.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.onclick=()=>{
+      if(answering)return;answering=true;
+      document.querySelectorAll('#a-opts .opt').forEach(x=>x.disabled=true);
+      b.classList.add('selected');
+      if(phase===0)answersP1[curIdx]=i;else answersP2[curIdx]=i;
+      setTimeout(()=>nextAnswer(),350);
+    };
+    optsEl.appendChild(b);
+  });
+  showScreen('s-answer');
+}
+
+function nextAnswer(){
+  curIdx++;
+  if(curIdx>=20){
+    curIdx=0;
+    if(phase===0){phase=1;transition('👀','Phase 2 — '+names[1]+' répond',names[0]+', pose le téléphone ! C\'est au tour de '+names[1]+' de répondre secrètement.','Je suis prêt·e, on y va !',()=>loadAnswer());}
+    else{phase=2;transition('🎯','Phase 3 — '+names[0]+' devine','C\'est au tour de '+names[0]+' de deviner les réponses de '+names[1]+' !','C\'est parti !',()=>loadGuess());}
+  } else loadAnswer();
+}
+
+function loadGuess(){
+  const qs=phase===2?qsP2:qsP1,answers=phase===2?answersP2:answersP1;
+  const guesser=phase===2?names[0]:names[1],answerer=phase===2?names[1]:names[0];
+  const q=qs[curIdx];
+  document.getElementById('g-counter').textContent='Question '+(curIdx+1)+' / 20';
+  document.getElementById('g-prog').style.width=((curIdx/20)*100)+'%';
+  document.getElementById('g-banner').innerHTML='<strong>'+guesser+'</strong> devine les réponses de <strong>'+answerer+'</strong>';
+  const cat=document.getElementById('g-cat');cat.textContent=q.label;cat.className='cat-badge cat-'+q.cat;
+  document.getElementById('g-q').textContent=q.q;
+  document.getElementById('g-sub').textContent='Qu\'a répondu '+answerer+' ?';
+  document.getElementById('g-fb').style.display='none';
+  document.getElementById('g-next').style.display='none';
+  const optsEl=document.getElementById('g-opts');optsEl.innerHTML='';
+  shuffle(q.opts.map((o,i)=>({o,i}))).forEach(({o,i})=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.onclick=()=>{
+      document.querySelectorAll('#g-opts .opt').forEach(x=>{x.disabled=true;if(x.textContent===q.opts[answers[curIdx]])x.classList.add('reveal');});
+      const ok=i===answers[curIdx];
+      if(!ok)b.classList.add('wrong');
+      if(ok){if(phase===2)scores[0]++;else scores[1]++;}
+      const fb=document.getElementById('g-fb');
+      fb.style.display='block';fb.className='feedback '+(ok?'good':'bad');
+      fb.textContent=ok?'🎉 Bonne réponse !':'❌ Raté ! La réponse était : '+q.opts[answers[curIdx]];
+      document.getElementById('sc1v').textContent=scores[0]+' ❤️';
+      document.getElementById('sc2v').textContent=scores[1]+' ❤️';
+      document.getElementById('g-next').style.display='flex';
+    };
+    optsEl.appendChild(b);
+  });
+  showScreen('s-guess');
+}
+
+function nextGuess(){
+  curIdx++;
+  if(curIdx>=20){
+    curIdx=0;
+    if(phase===2){phase=3;transition('🎯','Phase 4 — '+names[1]+' devine','Dernière phase ! '+names[1]+' devine les réponses de '+names[0]+'.','C\'est parti !',()=>loadGuess());}
+    else showResults();
+  } else loadGuess();
+}
+
+function showResults(){
+  showScreen('s-result');
+  document.getElementById('r-n1').textContent=names[0];
+  document.getElementById('r-n2').textContent=names[1];
+  const p1el=document.getElementById('r-p1'),p2el=document.getElementById('r-p2');
+  p1el.textContent=scores[0]+' ❤️';p2el.textContent=scores[1]+' ❤️';
+  if(scores[0]>scores[1])p1el.classList.add('winner-pts');
+  else if(scores[1]>scores[0])p2el.classList.add('winner-pts');
+  const total=scores[0]+scores[1];
+  document.getElementById('r-total').textContent='Total : '+total+' / 40 bonnes réponses';
+  const pct=total/40;
+  let msg=scores[0]===scores[1]?'Match nul ! ':(scores[0]>scores[1]?names[0]:names[1])+' connaît le mieux l\'autre ! ';
+  if(pct>=0.8)msg+='Vous vous connaissez par cœur — vraie complicité.';
+  else if(pct>=0.6)msg+='Vous vous connaissez bien, avec encore de belles surprises.';
+  else if(pct>=0.4)msg+='Il reste plein de choses à découvrir l\'un·e sur l\'autre !';
+  else msg+='Il y a encore beaucoup à apprendre… c\'est le moment d\'en parler !';
+  document.getElementById('r-msg').textContent=msg;
+}
+
+function restartGame(){
+  scores=[0,0];answersP1=[];answersP2=[];curIdx=0;phase=0;
+  const all=shuffle(QS);qsP1=all.slice(0,20);qsP2=all.slice(20,40);
+  document.getElementById('sc1v').textContent='0 ❤️';document.getElementById('sc2v').textContent='0 ❤️';
+  transition('👀','Phase 1 — '+names[0]+' répond',names[1]+', ferme les yeux ! '+names[0]+' va répondre secrètement.','Je suis prêt·e, on y va !',()=>loadAnswer());
+}
+</script>
+</body>
+</html>
