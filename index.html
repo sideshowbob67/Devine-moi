@@ -13,7 +13,7 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
 .header{text-align:center;margin-bottom:2rem;}
 .title{font-size:22px;font-weight:500;}
 .subtitle{font-size:15px;color:#666;margin-top:6px;line-height:1.5;}
-.card{background:#fff;border:1px solid #e8e8e6;border-radius:12px;padding:1.5rem;margin-bottom:1rem;}
+.card{background:#fff;border:1px solid #e8e8e6;border-radius:12px;padding:1.5rem;margin-bottom:1rem;transition:border-color 0.3s,background 0.3s;}
 .input-group{margin-bottom:1rem;}
 .input-group label{font-size:13px;color:#666;display:block;margin-bottom:6px;}
 .input-group input{width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#f5f5f3;}
@@ -31,6 +31,7 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
 .cat-intime{background:#ffeef0;color:#c0003a;}
 .cat-souvenir{background:#e6f2ff;color:#0055b0;}
 .cat-defi{background:#eaffea;color:#006e00;}
+.cat-spicy{background:#fde8ec;color:#b5003c;}
 .question-text{font-size:18px;font-weight:500;line-height:1.5;margin-bottom:1.25rem;}
 .hint{font-size:13px;color:#666;margin-bottom:10px;}
 .options{display:flex;flex-direction:column;gap:10px;}
@@ -61,6 +62,25 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
 .winner-pts{color:#1b5e20;}
 .result-total{text-align:center;font-size:14px;color:#666;margin-top:1rem;}
 .result-msg{text-align:center;font-size:15px;color:#666;line-height:1.6;margin-top:0.75rem;}
+/* Question count selector */
+.toggle-group{display:flex;gap:8px;}
+.toggle-btn{flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:#f5f5f3;font-size:15px;cursor:pointer;transition:all 0.15s;font-weight:400;}
+.toggle-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+.toggle-btn:hover:not(.active){background:#fff;border-color:#aaa;}
+/* Spicy toggle */
+.spicy-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid #e8e8e6;margin-top:0.75rem;}
+.spicy-info .spicy-label{font-size:15px;font-weight:500;}
+.spicy-info .spicy-desc{font-size:13px;color:#999;margin-top:3px;}
+.switch{position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:#ddd;border-radius:28px;transition:.3s;}
+.slider::before{content:"";position:absolute;width:22px;height:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+input:checked+.slider{background:#e53935;}
+input:checked+.slider::before{transform:translateX(22px);}
+/* Spicy mode active state for the setup card */
+#setup-card.spicy-mode{border-color:#f8bbd0;background:#fffafa;}
+/* Spicy mode active state for progress bar */
+.spicy-progress .progress-fill{background:#e53935;}
 </style>
 </head>
 <body>
@@ -69,11 +89,11 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
 <!-- SETUP -->
 <div class="screen active" id="s-setup">
   <div class="header">
-    <div style="font-size:32px;margin-bottom:0.75rem;">❤️ 🎯 ❤️</div>
+    <div style="font-size:32px;margin-bottom:0.75rem;" id="main-emoji">❤️ 🎯 ❤️</div>
     <div class="title">Par Cœur</div>
-    <div class="subtitle">4 phases · 20 questions chacun</div>
+    <div class="subtitle" id="main-subtitle">4 phases · 10 questions chacun</div>
   </div>
-  <div class="card">
+  <div class="card" id="setup-card">
     <div class="steps">
       <div class="step">① Joueur 1 répond à ses questions</div>
       <div class="step">② Joueur 2 répond à ses questions</div>
@@ -82,6 +102,24 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
     </div>
     <div class="input-group"><label>Joueur 1</label><input id="p1" placeholder="Prénom..." maxlength="20"/></div>
     <div class="input-group"><label>Joueur 2</label><input id="p2" placeholder="Prénom..." maxlength="20"/></div>
+    <div class="input-group">
+      <label>Nombre de questions par joueur</label>
+      <div class="toggle-group" id="qcount-group">
+        <button class="toggle-btn" onclick="setQCount(5)">5</button>
+        <button class="toggle-btn active" onclick="setQCount(10)">10</button>
+        <button class="toggle-btn" onclick="setQCount(20)">20</button>
+      </div>
+    </div>
+    <div class="spicy-row">
+      <div class="spicy-info">
+        <div class="spicy-label">🌶️ Mode Spicy</div>
+        <div class="spicy-desc">Questions intimes &amp; pimentées</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="spicy-toggle" onchange="toggleSpicy(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
     <button class="btn btn-primary" onclick="startGame()">▶ Lancer le jeu</button>
   </div>
 </div>
@@ -99,7 +137,7 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
 <!-- RÉPONDRE -->
 <div class="screen" id="s-answer">
   <div class="q-counter" id="a-counter"></div>
-  <div class="progress-bar"><div class="progress-fill" id="a-prog"></div></div>
+  <div class="progress-bar" id="a-progbar"><div class="progress-fill" id="a-prog"></div></div>
   <div class="phase-banner" id="a-banner"></div>
   <div class="card">
     <div class="cat-badge" id="a-cat"></div>
@@ -112,7 +150,7 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
 <!-- DEVINER -->
 <div class="screen" id="s-guess">
   <div class="q-counter" id="g-counter"></div>
-  <div class="progress-bar"><div class="progress-fill" id="g-prog"></div></div>
+  <div class="progress-bar" id="g-progbar"><div class="progress-fill" id="g-prog"></div></div>
   <div class="phase-banner" id="g-banner"></div>
   <div class="card">
     <div class="cat-badge" id="g-cat"></div>
@@ -142,6 +180,7 @@ body{font-family:system-ui,sans-serif;background:#f9f9f7;color:#1a1a1a;min-heigh
 
 </div>
 <script>
+/* ── Questions classiques ── */
 const QS=[
   {cat:'fun',label:'😄 Fun',q:'Quelle est ma pizza préférée ?',opts:['Margherita','Reine','4 fromages','Orientale']},
   {cat:'intime',label:'💕 Intime',q:'Quelle est ma plus grande peur ?',opts:['Les araignées','L\'échec','La solitude','Perdre un proche']},
@@ -185,13 +224,85 @@ const QS=[
   {cat:'fun',label:'😄 Fun',q:'Mon activité détente après une longue journée ?',opts:['Regarder une série','Lire','Jouer à un jeu','Rien faire du tout']},
 ];
 
+/* ── Questions Spicy 🌶️ ── */
+const QS_SPICY=[
+  {cat:'spicy',label:'🌶️ Spicy',q:'La partie de mon corps que je préfère chez toi ?',opts:['Les yeux','Les lèvres','Le corps entier','Les mains']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce qui m\'excite le plus chez toi ?',opts:['Ton regard','Ta voix','Ton toucher','Ta confiance en toi']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon fantasme de soirée en amoureux·se ?',opts:['Bain aux bougies','Dîner intime maison','Hôtel avec jacuzzi','Pique-nique au coucher du soleil']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce qui me met instantanément dans l\'ambiance ?',opts:['La musique douce','Les bougies','Un massage','Tes mots doux']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que je trouve le plus sexy chez toi ?',opts:['Quand tu cuisines','Quand tu ris','Quand tu es sûr·e de toi','Quand tu prends l\'initiative']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Quel vêtement de toi je trouve le plus sexy ?',opts:['En pyjama','Habillé·e pour sortir','En tenue de sport','En sous-vêtements']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ma façon préférée que tu m\'embrasses ?',opts:['Doucement','Avec passion','Spontanément','Longuement']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'La partie de mon corps où j\'aime le plus recevoir des bisous ?',opts:['Le cou','Les lèvres','L\'épaule','Le front']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce qui me donne envie de toi ?',opts:['Ton parfum','Ta façon de me regarder','Ton toucher','Ta voix']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon moment de la journée préféré avec toi ?',opts:['Le réveil','Le soir au lit','L\'apéro','La nuit']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que j\'aime quand tu prends l\'initiative ?',opts:['M\'embrasser sans prévenir','Organiser une surprise','Me prendre la main','Me dire des mots doux']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Comment je me sens après qu\'on ait été intimes ?',opts:['Comblé·e','Apaisé·e','Encore plus amoureux·se','Léger·ère et heureux·se']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon endroit préféré pour recevoir un massage ?',opts:['Le dos','Les épaules','La nuque','Les pieds']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce qui me rend fou·folle de désir ?',opts:['Ton regard complice','Quand tu te rapproches sans raison','Ton toucher sur ma nuque','Quand tu prends soin de moi']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon grand frisson avec toi, c\'est…',opts:['Ton regard intense','Quand tu chuchotes','Ta façon de m\'embrasser','Quand tu me tiens la main']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce dont j\'ai envie quand je suis proche de toi ?',opts:['Te toucher','Te parler','Juste être là','T\'embrasser']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon plus grand désir physique avec toi ?',opts:['Danser collé·e·s','Dormir enlacé·e·s toute une nuit','Un massage complet','Une longue séance de bisous']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que je ferais si tu me donnais carte blanche pour une soirée ?',opts:['Dîner gastronomique','Suite d\'hôtel et room service','Soirée à la maison en amoureux','Concert puis hôtel']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce qui me rend le plus heureux·se dans notre intimité ?',opts:['La tendresse','La passion','La complicité','Le fait qu\'on se découvre encore']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que je ressens quand tu me touches ?',opts:['La sécurité','Le désir','De l\'apaisement','De l\'électricité']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon type de câlin préféré ?',opts:['Long et serré','Court mais intense','Spontané dans la journée','Au lit avant de dormir']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que je n\'ai jamais osé te proposer ?',opts:['Un voyage surprise','Une soirée hors du commun','Quelque chose d\'un peu osé','Une déclaration devant tout le monde']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Quand je me sens le plus désirable ?',opts:['Quand tu me regardes avec intensité','Quand tu me fais un compliment','Quand tu prends l\'initiative','Après le sport']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que j\'aime le plus quand on se retrouve après une longue journée ?',opts:['Un long câlin','Un bisou et "comment tu vas ?"','Juste ta présence','Une petite attention']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ma position préférée pour dormir avec toi ?',opts:['Cuillère','Face à face','Dos à dos','Chacun de son côté']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'La chose que je trouve la plus intime dans notre relation ?',opts:['Dormir ensemble','Se voir sans filtre','Se dire les vraies choses','Se faire confiance totalement']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce qui crée instantanément l\'atmosphère romantique pour moi ?',opts:['Musique douce et lumières tamisées','Un dîner préparé avec soin','Film + plaid + toi','Bain chaud ensemble']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Comment je te vois physiquement ?',opts:['Beau·belle et séduisant·e','Naturellement attrayant·e','Sexy sans le savoir','La plus belle personne que je connaisse']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'La façon dont tu me montres que tu m\'aimes que je préfère ?',opts:['Les mots doux','Les gestes tendres','Les petites attentions','Le contact physique']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon fantasme de baiser ?',opts:['Au coucher du soleil','Sous la pluie','En voyage','Juste parce que t\'as envie']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que j\'aimerais qu\'on fasse plus souvent ensemble ?',opts:['Des massages','Danser ensemble','Des bains ensemble','Des soirées jeux']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Comment je préfère qu\'on se réveille le week-end ?',opts:['Câlins avant de se lever','Petit-déjeuner au lit','Rester longtemps sous la couette à parler','Faire la grasse matinée collé·e·s']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce qui me rend jaloux·se (de façon positive) ?',opts:['Quand les autres te regardent','Quand tu te mets sur ton 31','Quand tu souris à quelqu\'un d\'autre','Quand tu es super à l\'aise en société']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon kiff absolu physique avec toi ?',opts:['Les câlins au réveil','Les bisous spontanés','Dormir collé·e·s','Les longues étreintes']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que j\'aimerais qu\'on essaie ensemble qu\'on n\'a jamais fait ?',opts:['Un cours de danse','Un week-end improvisé','Un dîner les yeux dans les yeux sans téléphone','Un massage mutuel']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Quel est mon plus grand attrait physique chez quelqu\'un ?',opts:['Les yeux','Le sourire','Les mains','La silhouette']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que je fais pour te faire comprendre que j\'ai envie de toi ?',opts:['Je me rapproche physiquement','Je te lance un regard','Je te touche doucement','Je le dis directement']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Mon endroit de rêve pour passer une nuit romantique ?',opts:['Un chalet à la montagne','Un hôtel de luxe en ville','Un bungalow sur l\'eau','Une villa en bord de mer']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Ce que j\'admire le plus dans notre intimité ?',opts:['Notre complicité','Notre confiance mutuelle','Notre façon de nous retrouver toujours','Notre passion qui dure']},
+  {cat:'spicy',label:'🌶️ Spicy',q:'Que fais-je quand je veux vraiment ton attention ?',opts:['Je me colle à toi','Je te regarde jusqu\'à ce que tu remarques','Je dis ton prénom différemment','Je t\'embrasse dans le cou']},
+];
+
 function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 
 let names=['',''],scores=[0,0];
 let qsP1=[],qsP2=[],answersP1=[],answersP2=[];
 let phase=0,curIdx=0,trNext=null,answering=false;
+let numQ=10,spicyMode=false;
+
+function setQCount(n){
+  numQ=n;
+  document.querySelectorAll('#qcount-group .toggle-btn').forEach(b=>{
+    b.classList.toggle('active',parseInt(b.textContent)===n);
+  });
+  updateSubtitle();
+}
+
+function toggleSpicy(on){
+  spicyMode=on;
+  const card=document.getElementById('setup-card');
+  card.classList.toggle('spicy-mode',on);
+  document.getElementById('main-emoji').textContent=on?'🌶️ 🔥 🌶️':'❤️ 🎯 ❤️';
+  updateSubtitle();
+}
+
+function updateSubtitle(){
+  document.getElementById('main-subtitle').textContent='4 phases · '+numQ+' questions chacun'+(spicyMode?' 🌶️':'');
+}
 
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function applySpicyProgress(){
+  ['a-progbar','g-progbar'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.toggle('spicy-progress',spicyMode);
+  });
+}
 
 function transition(emoji,title,msg,btnLabel,next){
   trNext=next;
@@ -206,17 +317,19 @@ function startGame(){
   names[0]=document.getElementById('p1').value.trim()||'Joueur 1';
   names[1]=document.getElementById('p2').value.trim()||'Joueur 2';
   scores=[0,0];answersP1=[];answersP2=[];curIdx=0;phase=0;
-  const all=shuffle(QS);qsP1=all.slice(0,20);qsP2=all.slice(20,40);
+  const pool=spicyMode?QS_SPICY:QS;
+  const all=shuffle(pool);qsP1=all.slice(0,numQ);qsP2=all.slice(numQ,numQ*2);
   document.getElementById('sc1n').textContent=names[0];
   document.getElementById('sc2n').textContent=names[1];
-  transition('👀','Phase 1 — '+names[0]+' répond',names[1]+', ferme les yeux ! '+names[0]+' va répondre secrètement à ses 20 questions.','Je suis prêt·e, on y va !',()=>loadAnswer());
+  applySpicyProgress();
+  transition('👀','Phase 1 — '+names[0]+' répond',names[1]+', ferme les yeux ! '+names[0]+' va répondre secrètement à ses '+numQ+' questions.','Je suis prêt·e, on y va !',()=>loadAnswer());
 }
 
 function loadAnswer(){
   answering=false;
   const qs=phase===0?qsP1:qsP2,who=phase===0?names[0]:names[1],q=qs[curIdx];
-  document.getElementById('a-counter').textContent='Question '+(curIdx+1)+' / 20';
-  document.getElementById('a-prog').style.width=((curIdx/20)*100)+'%';
+  document.getElementById('a-counter').textContent='Question '+(curIdx+1)+' / '+numQ;
+  document.getElementById('a-prog').style.width=((curIdx/numQ)*100)+'%';
   document.getElementById('a-banner').innerHTML='<strong>'+who+'</strong> répond sur lui·elle-même';
   const cat=document.getElementById('a-cat');cat.textContent=q.label;cat.className='cat-badge cat-'+q.cat;
   document.getElementById('a-q').textContent=q.q;
@@ -237,9 +350,9 @@ function loadAnswer(){
 
 function nextAnswer(){
   curIdx++;
-  if(curIdx>=20){
+  if(curIdx>=numQ){
     curIdx=0;
-    if(phase===0){phase=1;transition('👀','Phase 2 — '+names[1]+' répond',names[0]+', pose le téléphone ! C\'est au tour de '+names[1]+' de répondre secrètement.','Je suis prêt·e, on y va !',()=>loadAnswer());}
+    if(phase===0){phase=1;transition('👀','Phase 2 — '+names[1]+' répond',names[0]+', pose le téléphone ! C\'est au tour de '+names[1]+' de répondre secrètement à ses '+numQ+' questions.','Je suis prêt·e, on y va !',()=>loadAnswer());}
     else{phase=2;transition('🎯','Phase 3 — '+names[0]+' devine','C\'est au tour de '+names[0]+' de deviner les réponses de '+names[1]+' !','C\'est parti !',()=>loadGuess());}
   } else loadAnswer();
 }
@@ -248,8 +361,8 @@ function loadGuess(){
   const qs=phase===2?qsP2:qsP1,answers=phase===2?answersP2:answersP1;
   const guesser=phase===2?names[0]:names[1],answerer=phase===2?names[1]:names[0];
   const q=qs[curIdx];
-  document.getElementById('g-counter').textContent='Question '+(curIdx+1)+' / 20';
-  document.getElementById('g-prog').style.width=((curIdx/20)*100)+'%';
+  document.getElementById('g-counter').textContent='Question '+(curIdx+1)+' / '+numQ;
+  document.getElementById('g-prog').style.width=((curIdx/numQ)*100)+'%';
   document.getElementById('g-banner').innerHTML='<strong>'+guesser+'</strong> devine les réponses de <strong>'+answerer+'</strong>';
   const cat=document.getElementById('g-cat');cat.textContent=q.label;cat.className='cat-badge cat-'+q.cat;
   document.getElementById('g-q').textContent=q.q;
@@ -267,8 +380,8 @@ function loadGuess(){
       const fb=document.getElementById('g-fb');
       fb.style.display='block';fb.className='feedback '+(ok?'good':'bad');
       fb.textContent=ok?'🎉 Bonne réponse !':'❌ Raté ! La réponse était : '+q.opts[answers[curIdx]];
-      document.getElementById('sc1v').textContent=scores[0]+' ❤️';
-      document.getElementById('sc2v').textContent=scores[1]+' ❤️';
+      document.getElementById('sc1v').textContent=scores[0]+(spicyMode?' 🌶️':' ❤️');
+      document.getElementById('sc2v').textContent=scores[1]+(spicyMode?' 🌶️':' ❤️');
       document.getElementById('g-next').style.display='flex';
     };
     optsEl.appendChild(b);
@@ -278,7 +391,7 @@ function loadGuess(){
 
 function nextGuess(){
   curIdx++;
-  if(curIdx>=20){
+  if(curIdx>=numQ){
     curIdx=0;
     if(phase===2){phase=3;transition('🎯','Phase 4 — '+names[1]+' devine','Dernière phase ! '+names[1]+' devine les réponses de '+names[0]+'.','C\'est parti !',()=>loadGuess());}
     else showResults();
@@ -290,12 +403,13 @@ function showResults(){
   document.getElementById('r-n1').textContent=names[0];
   document.getElementById('r-n2').textContent=names[1];
   const p1el=document.getElementById('r-p1'),p2el=document.getElementById('r-p2');
-  p1el.textContent=scores[0]+' ❤️';p2el.textContent=scores[1]+' ❤️';
+  const heart=spicyMode?'🌶️':'❤️';
+  p1el.textContent=scores[0]+' '+heart;p2el.textContent=scores[1]+' '+heart;
   if(scores[0]>scores[1])p1el.classList.add('winner-pts');
   else if(scores[1]>scores[0])p2el.classList.add('winner-pts');
   const total=scores[0]+scores[1];
-  document.getElementById('r-total').textContent='Total : '+total+' / 40 bonnes réponses';
-  const pct=total/40;
+  document.getElementById('r-total').textContent='Total : '+total+' / '+(numQ*2)+' bonnes réponses';
+  const pct=total/(numQ*2);
   let msg=scores[0]===scores[1]?'Match nul ! ':(scores[0]>scores[1]?names[0]:names[1])+' connaît le mieux l\'autre ! ';
   if(pct>=0.8)msg+='Vous vous connaissez par cœur — vraie complicité.';
   else if(pct>=0.6)msg+='Vous vous connaissez bien, avec encore de belles surprises.';
@@ -306,9 +420,11 @@ function showResults(){
 
 function restartGame(){
   scores=[0,0];answersP1=[];answersP2=[];curIdx=0;phase=0;
-  const all=shuffle(QS);qsP1=all.slice(0,20);qsP2=all.slice(20,40);
-  document.getElementById('sc1v').textContent='0 ❤️';document.getElementById('sc2v').textContent='0 ❤️';
-  transition('👀','Phase 1 — '+names[0]+' répond',names[1]+', ferme les yeux ! '+names[0]+' va répondre secrètement.','Je suis prêt·e, on y va !',()=>loadAnswer());
+  const pool=spicyMode?QS_SPICY:QS;
+  const all=shuffle(pool);qsP1=all.slice(0,numQ);qsP2=all.slice(numQ,numQ*2);
+  document.getElementById('sc1v').textContent='0'+(spicyMode?' 🌶️':' ❤️');
+  document.getElementById('sc2v').textContent='0'+(spicyMode?' 🌶️':' ❤️');
+  transition('👀','Phase 1 — '+names[0]+' répond',names[1]+', ferme les yeux ! '+names[0]+' va répondre secrètement à ses '+numQ+' questions.','Je suis prêt·e, on y va !',()=>loadAnswer());
 }
 </script>
 </body>
